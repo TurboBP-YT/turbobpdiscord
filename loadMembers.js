@@ -21,7 +21,7 @@ async function putMember(guildMember, col /* an MDB collection instance */) {
   });
   const docsData = [];
   if (
-    Date.now() / 1000 - guildMember.joinTimestampSeconds <=
+    Date.now() / 1000 - joinTimestampSeconds <=
     process.env["role_rank_Elder1_min_membership_time_s"]
   ) {
     docsData.push(makeDoc("🪙 Elder I"));
@@ -31,11 +31,12 @@ async function putMember(guildMember, col /* an MDB collection instance */) {
   // DB write
   try {
     await col.insertMany(docsData);
-    console.info("put scheduled tasks for user " + guildMember.user.username);
   } catch {
     console.warn("database error");
     exit();
   }
+
+  return "put scheduled tasks for user " + guildMember.user.username;
 }
 
 async function main() {
@@ -72,12 +73,15 @@ async function main() {
     );
   console.info(`${newMembers.length} members to process`);
 
+  let n = 0;
   await dbOperation(mdbClient, async (col) => {
     for (const guildMember of newMembers) {
-      putMember(guildMember, col);
+      n += 1;
+      console.info(n + " | " + (await putMember(guildMember, col)));
       await sleep(T_PAUSE_MS);
     }
   }).catch(console.dir);
 }
 
 main();
+dClient.destroy();
