@@ -1,7 +1,7 @@
 import { dbOperation, getClient } from "./_db.js";
 import { Client, GatewayIntentBits } from "discord.js";
 
-const T_PAUSE_MS = 1000;
+const T_PAUSE_MS = 500;
 
 const ROLES_TIMES_S = {
   "🪙 Elder I": 1, //Number(process.env["role_rank_Elder1_min_membership_time_s"]),
@@ -46,8 +46,8 @@ export async function POST(request) {
   let jobSucceeded = false;
 
   await dbOperation(mdbClient, async (col) => {
-    for await (const doc of col.find(
-      { sort: { joinTimestamp: 1 } } // Sort by joinTimestamp in ascending order
+    for await (const doc of col.find().sort(
+      { joinTimestamp: 1 } // Sort by joinTimestamp in ascending order
     )) {
       // checks if enough time has passed since the user joined the server
       if (
