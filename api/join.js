@@ -35,7 +35,7 @@ export async function POST(request) {
         roleToAssign: "💎 Elder II",
       },
     ];
-    col.insert(docsData);
+    await col.insertMany(docsData);
 
     jobSucceeded = true;
   }).catch(console.dir);

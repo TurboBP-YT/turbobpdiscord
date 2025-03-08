@@ -46,7 +46,7 @@ export async function POST(request) {
   let jobSucceeded = false;
 
   await dbOperation(mdbClient, async (col) => {
-    for (const doc in col.find(
+    for await (const doc of col.find(
       { sort: { joinTimestamp: 1 } } // Sort by joinTimestamp in ascending order
     )) {
       // checks if enough time has passed since the user joined the server
@@ -54,7 +54,7 @@ export async function POST(request) {
         continue; // not long enough
       }
 
-      col.remove({ _id: doc._id });
+      await col.deleteOne({ _id: doc._id });
 
       // checks if user is still in the server
       const guild = dClient.guilds.cache.get(process.env["discord_guild_id"]);
