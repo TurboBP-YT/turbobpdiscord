@@ -35,23 +35,22 @@ export async function POST(request) {
 
   const mdbClient = getClient();
 
+  const docsData = [
+    {
+      userId: bodyJSON.userId,
+      joinTimestamp: joinTimestamp,
+      roleToAssign: "🪙 Elder I",
+    },
+    {
+      userId: bodyJSON.userId,
+      joinTimestamp: joinTimestamp,
+      roleToAssign: "💎 Elder II",
+    },
+  ];
+
   let jobSucceeded = false;
-
   await dbOperation(mdbClient, async (col) => {
-    const docsData = [
-      {
-        userId: bodyJSON.userId,
-        joinTimestamp: joinTimestamp,
-        roleToAssign: "🪙 Elder I",
-      },
-      {
-        userId: bodyJSON.userId,
-        joinTimestamp: joinTimestamp,
-        roleToAssign: "💎 Elder II",
-      },
-    ];
     await col.insertMany(docsData);
-
     jobSucceeded = true;
   }).catch(console.dir);
 

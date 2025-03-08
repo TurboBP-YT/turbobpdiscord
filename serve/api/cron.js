@@ -1,14 +1,14 @@
 import { dbOperation, getClient } from "./_db.js";
 import { Client, GatewayIntentBits, Events } from "discord.js";
 
-const T_PAUSE_MS = 500;
+export const T_PAUSE_MS = 500;
 
-const ROLES_TIMES_S = {
+export const ROLES_TIMES_S = {
   "🪙 Elder I": Number(process.env["role_rank_Elder1_min_membership_time_s"]),
   "💎 Elder II": Number(process.env["role_rank_Elder2_min_membership_time_s"]),
 };
 
-function sleep(ms) {
+export function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
@@ -38,10 +38,13 @@ export async function POST(request) {
       GatewayIntentBits.MessageContent,
     ],
   });
-  dClient.once(Events.ClientReady, (readyClient) => {
-    dClient = readyClient;
-  });
   dClient.login(process.env["discord_token"]);
+  await new Promise((resolve) => {
+    dClient.once(Events.ClientReady, (readyClient) => {
+      dClient = readyClient;
+      resolve();
+    });
+  });
 
   let guild = dClient.guilds.cache.get(process.env["discord_guild_id"]);
   if (guild == undefined) {
