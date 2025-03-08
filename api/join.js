@@ -6,7 +6,7 @@ export async function POST(request) {
   try {
     bodyJSON = JSON.parse(rawBody);
   } catch {
-    return new Response("failed", {
+    return new Response("bad request", {
       status: 400,
     });
   }
@@ -16,7 +16,24 @@ export async function POST(request) {
     });
   }
 
+  if (
+    !(
+      Object.keys(bodyJSON).includes("joinTimestamp") &&
+      bodyJSON.joinTimestamp != null &&
+      Object.keys(bodyJSON).includes("roleToAssign") &&
+      bodyJSON.roleToAssign != null &&
+      Object.keys(bodyJSON).includes("userId") &&
+      bodyJSON.userId != null
+    )
+  ) {
+    return new Response("missing request data", {
+      status: 400,
+    });
+  }
+
   //
+
+  const joinTimestamp = Number(bodyJSON.joinTimestamp);
 
   const mdbClient = getClient();
 
@@ -26,12 +43,12 @@ export async function POST(request) {
     const docsData = [
       {
         userId: bodyJSON.userId,
-        joinTimestamp: bodyJSON.joinTimestamp,
+        joinTimestamp: joinTimestamp,
         roleToAssign: "🪙 Elder I",
       },
       {
         userId: bodyJSON.userId,
-        joinTimestamp: bodyJSON.joinTimestamp,
+        joinTimestamp: joinTimestamp,
         roleToAssign: "💎 Elder II",
       },
     ];
