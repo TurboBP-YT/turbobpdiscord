@@ -1,6 +1,10 @@
-import { dbOperation, getClient } from "serve/api/_db.js";
-import { T_PAUSE_MS, ROLES_TIMES_S, sleep } from "serve/api/cron.js";
+import { exit } from "node:process";
+import { dbOperation, getClient } from "./serve/api/_db.js";
+import { T_PAUSE_MS, ROLES_TIMES_S, sleep } from "./serve/api/cron.js";
 import { Client, GatewayIntentBits, Events } from "discord.js";
+
+import * as dotenv from "dotenv";
+dotenv.config();
 
 const mdbClient = getClient();
 
@@ -8,7 +12,7 @@ var dClient = new Client({
   intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
 });
 
-async function putMember(guildMember) {
+async function putMember(guildMember, col /* an MDB collection instance */) {
   const joinTimestampSeconds = guildMember.joinedTimestamp / 1000;
   const makeDoc = (roleName) => ({
     userId: guildMember.id,
@@ -24,16 +28,13 @@ async function putMember(guildMember) {
   }
   docsData.push(makeDoc("💎 Elder II"));
 
-  let jobSucceeded = false;
-  await dbOperation(mdbClient, async (col) => {
+  // DB write
+  try {
     await col.insertMany(docsData);
-    jobSucceeded = true;
-  }).catch(console.dir);
-
-  if (jobSucceeded) {
-    console.info("put scheduled tasks for user " + guildMember.username);
-  } else {
+    console.info("put scheduled tasks for user " + guildMember.user.username);
+  } catch {
     console.warn("database error");
+    exit();
   }
 }
 
@@ -51,27 +52,32 @@ async function main() {
     .then((_guild) => _guild)
     .catch((error) => {
       console.error(`Failed to fetch guild: ${error}`);
+      exit();
     });
 
-  let newMembers;
+  let members;
   try {
-    const members = await guild.members.fetch();
-    newMembers = [...members.values()]
-      .sort((a, b) => a.joinedTimestamp - b.joinedTimestamp)
-      .filter(
-        (m) =>
-          m.joinedTimestamp >=
-          Date.now() / 1000 -
-            Number(process.env["role_rank_Elder2_min_membership_time_s"])
-      );
+    members = await guild.members.fetch();
   } catch (error) {
-    return console.error("Failed to fetch members. ", error);
+    console.error("Failed to fetch members. ", error);
+    exit();
   }
+  const newMembers = [...members.values()]
+    .sort((a, b) => a.joinedTimestamp - b.joinedTimestamp)
+    .filter(
+      (m) =>
+        m.joinedTimestamp / 1000 >=
+        Date.now() / 1000 -
+          Number(process.env["role_rank_Elder2_min_membership_time_s"])
+    );
+  console.info(`${newMembers.length} members to process`);
 
-  for (const guildMember of newMembers) {
-    putMember(guildMember);
-    sleep(T_PAUSE_MS);
-  }
+  await dbOperation(mdbClient, async (col) => {
+    for (const guildMember of newMembers) {
+      putMember(guildMember, col);
+      await sleep(T_PAUSE_MS);
+    }
+  }).catch(console.dir);
 }
 
 main();
