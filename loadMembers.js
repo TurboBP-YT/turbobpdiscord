@@ -5,12 +5,7 @@ import { Client, GatewayIntentBits, Events } from "discord.js";
 const mdbClient = getClient();
 
 var dClient = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMembers,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent,
-  ],
+  intents: [GatewayIntentBits.Guilds, GatewayIntentBits.GuildMembers],
 });
 
 async function putMember(guildMember) {
