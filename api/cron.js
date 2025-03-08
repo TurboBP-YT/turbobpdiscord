@@ -50,11 +50,16 @@ export async function POST(request) {
       { sort: { joinTimestamp: 1 } } // Sort by joinTimestamp in ascending order
     )) {
       // checks if enough time has passed since the user joined the server
-      if (Date.now() - doc.joinTimestamp < ROLES_TIMES_S[doc.roleToAssign]) {
+      if (
+        Date.now() / 1000 - doc.joinTimestamp <
+        ROLES_TIMES_S[doc.roleToAssign]
+      ) {
+        console.log("skipped scheduled task = not time yet");
         continue; // not long enough
       }
 
       await col.deleteOne({ _id: doc._id });
+      console.log("document deleted");
 
       // checks if user is still in the server
       const guild = dClient.guilds.cache.get(process.env["discord_guild_id"]);

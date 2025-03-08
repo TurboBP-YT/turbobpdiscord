@@ -31,7 +31,7 @@ export async function POST(request) {
 
   //
 
-  const joinTimestamp = Number(bodyJSON.joinTimestamp);
+  const joinTimestamp = Number(bodyJSON.joinTimestamp) / 1000; // seconds
 
   const mdbClient = getClient();
 
