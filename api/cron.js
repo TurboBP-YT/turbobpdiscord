@@ -4,8 +4,8 @@ import { Client, GatewayIntentBits } from "discord.js";
 const T_PAUSE_MS = 1000;
 
 const ROLES_TIMES_S = {
-  "🪙 Elder I": Number(process.env["role_rank_Elder1_min_membership_time_s"]),
-  "💎 Elder II": Number(process.env["role_rank_Elder2_min_membership_time_s"]),
+  "🪙 Elder I": 1, //Number(process.env["role_rank_Elder1_min_membership_time_s"]),
+  "💎 Elder II": 500, //Number(process.env["role_rank_Elder2_min_membership_time_s"]),
 };
 
 const dClient = new Client({
