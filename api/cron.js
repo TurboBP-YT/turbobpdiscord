@@ -1,21 +1,12 @@
 import { dbOperation, getClient } from "./_db.js";
-import { Client, GatewayIntentBits } from "discord.js";
+import { Client, GatewayIntentBits, Events } from "discord.js";
 
 const T_PAUSE_MS = 500;
 
 const ROLES_TIMES_S = {
-  "🪙 Elder I": 1, //Number(process.env["role_rank_Elder1_min_membership_time_s"]),
-  "💎 Elder II": 500, //Number(process.env["role_rank_Elder2_min_membership_time_s"]),
+  "🪙 Elder I": Number(process.env["role_rank_Elder1_min_membership_time_s"]),
+  "💎 Elder II": Number(process.env["role_rank_Elder2_min_membership_time_s"]),
 };
-
-const dClient = new Client({
-  intents: [
-    GatewayIntentBits.Guilds,
-    GatewayIntentBits.GuildMembers,
-    GatewayIntentBits.GuildMessages,
-    GatewayIntentBits.MessageContent,
-  ],
-});
 
 function sleep(ms) {
   return new Promise((resolve) => setTimeout(resolve, ms));
@@ -39,7 +30,36 @@ export async function POST(request) {
 
   //
 
+  var dClient = new Client({
+    intents: [
+      GatewayIntentBits.Guilds,
+      GatewayIntentBits.GuildMembers,
+      GatewayIntentBits.GuildMessages,
+      GatewayIntentBits.MessageContent,
+    ],
+  });
+  dClient.once(Events.ClientReady, (readyClient) => {
+    dClient = readyClient;
+  });
   dClient.login(process.env["discord_token"]);
+
+  let guild = dClient.guilds.cache.get(process.env["discord_guild_id"]);
+  if (guild == undefined) {
+    // guild is uncached
+    await dClient.guilds
+      .fetch(process.env["discord_guild_id"])
+      .then((_guild) => {
+        guild = _guild;
+      })
+      .catch((error) => {
+        console.error(`Failed to fetch guild: ${error}`);
+      });
+    if (guild == undefined) {
+      return new Response("failed", {
+        status: 500,
+      });
+    }
+  }
 
   const mdbClient = getClient();
 
@@ -62,7 +82,6 @@ export async function POST(request) {
       console.log("document deleted");
 
       // checks if user is still in the server
-      const guild = dClient.guilds.cache.get(process.env["discord_guild_id"]);
       const [isUserInGuild, member] = await guild.members
         .fetch(doc.userId)
         .then((member) => {
