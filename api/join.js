@@ -20,8 +20,6 @@ export async function POST(request) {
     !(
       Object.keys(bodyJSON).includes("joinTimestamp") &&
       bodyJSON.joinTimestamp != null &&
-      Object.keys(bodyJSON).includes("roleToAssign") &&
-      bodyJSON.roleToAssign != null &&
       Object.keys(bodyJSON).includes("userId") &&
       bodyJSON.userId != null
     )
